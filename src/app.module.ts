@@ -32,7 +32,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
           PieceOwnership,
           Player,
         ],
-        synchronize: configService.get('DB_SYNC'),
+        synchronize: false,
       }),
       inject:[ConfigService]
     }),
