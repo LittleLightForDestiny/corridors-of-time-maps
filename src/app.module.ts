@@ -10,7 +10,7 @@ import { PieceOwnership } from './entity/piece-ownership.entity';
 import { Player } from './entity/player.entity';
 import { MapModule } from './map/map.module';
 import { PlayerModule } from './player/player.module';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -18,13 +18,13 @@ import { ConfigModule } from '@nestjs/config';
       { isGlobal: true, }
     ),
     TypeOrmModule.forRootAsync({
-      useFactory: () => ({
+      useFactory: (configService: ConfigService) => ({
         type: 'mysql',
         host: 'localhost',
         port: 3306,
-        username: 'admin',
-        password: 'admin',
-        database: 'corridors-of-time',
+        username: configService.get('DB_USERNAME'),
+        password: configService.get('DB_PASSWORD'),
+        database: configService.get('DB_NAME'),
         entities: [
           CorridorMap,
           MapPiece,
@@ -32,7 +32,9 @@ import { ConfigModule } from '@nestjs/config';
           PieceOwnership,
           Player,
         ],
+        synchronize: configService.get('DB_SYNC'),
       }),
+      inject:[ConfigService]
     }),
     PlayerModule,
     MapModule],

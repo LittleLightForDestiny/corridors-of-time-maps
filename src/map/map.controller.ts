@@ -7,7 +7,7 @@ import { CreateMapForPieceDto } from './dto/create-map-for-piece.dto';
 import { MapService } from './map.service';
 import { MapPiece } from '../entity/map-piece.entity';
 
-@Controller('map')
+@Controller('api/map')
 export class MapController {
     constructor(private service: MapService, private pieceService: MapPieceService) {
     }

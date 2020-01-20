@@ -6,7 +6,7 @@ import { MapPieceService } from './map-piece.service';
 import { CreateMapPieceDto } from './dto/create-map-piece.dto';
 
 
-@Controller('map-piece')
+@Controller('api/map-piece')
 export class MapPieceController {
     constructor(public service: MapPieceService) {
     }
