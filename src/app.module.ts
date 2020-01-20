@@ -17,21 +17,22 @@ import { ConfigModule } from '@nestjs/config';
     ConfigModule.forRoot(
       { isGlobal: true, }
     ),
-    TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: 'localhost',
-      port: 3306,
-      username: 'admin',
-      password: 'admin',
-      database: 'corridors-of-time',
-      entities: [
-        CorridorMap,
-        MapPiece,
-        PieceCorner,
-        PieceOwnership,
-        Player,
-      ],
-      synchronize: true,
+    TypeOrmModule.forRootAsync({
+      useFactory: () => ({
+        type: 'mysql',
+        host: 'localhost',
+        port: 3306,
+        username: 'admin',
+        password: 'admin',
+        database: 'corridors-of-time',
+        entities: [
+          CorridorMap,
+          MapPiece,
+          PieceCorner,
+          PieceOwnership,
+          Player,
+        ],
+      }),
     }),
     PlayerModule,
     MapModule],
