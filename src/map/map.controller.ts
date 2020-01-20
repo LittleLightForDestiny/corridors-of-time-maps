@@ -2,15 +2,14 @@ import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { DeepPartial, getRepository } from 'typeorm';
 import { CorridorMap } from '../entity/corridor-map.entity';
 import { PieceCorner } from '../entity/piece-corner.entity';
-import { MapPieceService } from '../map-piece/map-piece.service';
-import { MapSlotService } from '../map-slot/map-slot.service';
+import { MapPieceService } from './map-piece.service';
 import { CreateMapForPieceDto } from './dto/create-map-for-piece.dto';
 import { MapService } from './map.service';
 import { MapPiece } from '../entity/map-piece.entity';
 
 @Controller('map')
 export class MapController {
-    constructor(private service: MapService, private slotService: MapSlotService, private pieceService: MapPieceService) {
+    constructor(private service: MapService, private pieceService: MapPieceService) {
     }
 
     @Post('create-missing-maps')
@@ -19,11 +18,8 @@ export class MapController {
         var maps:CorridorMap[] = [];
         for(var i in all){
             var piece = all[i];
-            var slot = await this.slotService.findOne({piece:piece});
-            if(!slot){
-                var map = await this.createMapWithInitialPiece(piece);
-                maps.push(map);
-            }
+            var map = await this.createMapWithInitialPiece(piece);
+            maps.push(map);
         }
         return maps;
     }
@@ -40,36 +36,57 @@ export class MapController {
     }
 
     async createMapWithInitialPiece(piece: MapPiece) {
-        var mapSlot = await this.slotService.findOne({
-            piece: piece
-        }, {
-            relations: ['map']
-        });
         var map: CorridorMap;
-        if (mapSlot) {
-            map = mapSlot.map;
+        if (piece.map) {
+            map = piece.map;
         } else {
             map = await this.service.createOne({
-                slots: [
-                    {
-                        piece: piece,
-                    }
-                ]
             });
         }
-        await this.createNeighbours(map, [mapSlot?.x ?? 0, mapSlot?.y ?? 0], []);
+        await this.createNeighbours(map, [piece?.x ?? 0, piece?.y ?? 0], []);
         map = await this.service.findOne(map.id);
-        map.totalPieces = map.slots.length;
+        map.totalPieces = map.pieces.length;
         this.service.save(map);
         return map;
     }
 
     @Get('get-map')
     async getMap(@Query('id') mapId: number) {
-        return this.service.findOne({
+        let maps = await this.service.find({
+            relations:['pieces'],
             order:{
                 totalPieces:'DESC'
-            }
+            },
+            skip:mapId,
+            take:1
+        });
+        return maps[0];
+    }
+
+    @Get('reprocess-map')
+    async reprocessMap(@Query('id') mapId:number){
+        let maps = await this.service.find({
+            relations:['pieces'],
+            order:{
+                totalPieces:'DESC'
+            },
+            skip:mapId,
+            take:1
+        });
+        let map = maps[0];
+        let centralPiece = await map.pieces.find((p)=>p.x == 0 && p.y == 0);
+        await this.pieceService.addNeighbours(map, centralPiece, []);
+        return await this.service.findOne(map.id);
+    }
+
+    @Post('update-counts')
+    async updateCounts(){
+        await this.service.updatePieceCounts();
+        return await this.service.find({
+            order:{
+                totalPieces:'DESC'
+            },
+            loadEagerRelations:false,
         });
     }
 
@@ -96,8 +113,8 @@ export class MapController {
     }
 
     async addPiece(map: CorridorMap, [x, y]: number[], testedSlots: string[]) {
-        var slot = await this.slotService.findOne({ map: map, x: x, y: y });
-        if (!slot) {
+        var piece = await this.pieceService.findOne({ map: map, x: x, y: y });
+        if (!piece) {
             var requirements = await this.findSideRequirements(map, [x, y]);
             if (requirements.length > 0) {
                 var candidates = new Map<string, number>();
@@ -122,17 +139,14 @@ export class MapController {
                 }
                 var piece = await this.pieceService.findOne({ identifier: pieceId });
                 if (piece) {
-                    slot = await this.slotService.createOne({
-                        x: x,
-                        y: y,
-                        map: map,
-                        piece: piece,
-                    });
+                    piece.x = x;
+                    piece.y = y;
+                    piece.map = map;
                 }
             }
         }
-        if (slot) {
-            await this.createNeighbours(map, [slot.x, slot.y], testedSlots);
+        if (piece) {
+            await this.createNeighbours(map, [piece.x, piece.y], testedSlots);
         }
     }
 
@@ -140,14 +154,13 @@ export class MapController {
         var requirements: DeepPartial<PieceCorner>[] = [];
         for (var i = 0; i <= 5; i++) {
             var [x, y] = this.getCoordinate(center, i);
-            var slot = await this.slotService.findOne({
+            var piece = await this.pieceService.findOne({
                 map: map,
                 x: x,
                 y: y
             }, {
                 relations: ['piece']
             });
-            var piece = slot?.piece;
             var order = (i + 3) % 6;
             var corner = piece?.corners?.find((corner) => corner.order == order);
             if (corner && corner.code.toUpperCase() != 'BBBBBBB') {

@@ -9,6 +9,9 @@ export class BungieAuthMiddleware implements NestMiddleware {
   }
   async use(req: Request, res: any, next: () => void) {
     var token = req.headers['authorization'];
+    if(!token){
+      throw new HttpException('Login Failed.', 401);
+    }
     var membershipId;
     var name;
     if (token) {

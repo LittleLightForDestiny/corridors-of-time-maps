@@ -1,14 +1,15 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
-import { MapSlot } from './map-slot.entity';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, Index } from 'typeorm';
+import { MapPiece } from './map-piece.entity';
 
 @Entity()
 export class CorridorMap {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @OneToMany(type => MapSlot, slot => slot.map, { cascade: true, eager:true })
-    public slots: MapSlot[];
+    @OneToMany(type => MapPiece, piece => piece.map)
+    public pieces: MapPiece[];
 
     @Column({default:0})
+    @Index("totalPieces")
     totalPieces:number;
 }

@@ -8,12 +8,12 @@ export class PieceOwnership{
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column()
+    @Column({length:1000})
     public evidenceImage: string;
     
     @ManyToOne(type => Player, player=> player.pieces)
     public owner: Player;
 
-    @ManyToOne(type => MapPiece, map => map.owners)
+    @ManyToOne(type => MapPiece, piece => piece.owners)
     public piece: MapPiece;
 }

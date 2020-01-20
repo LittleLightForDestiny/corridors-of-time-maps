@@ -10,7 +10,7 @@ export class CreateMapPieceDto {
 
     @IsNotEmpty()
     @Length(6)
-    sides:string[];
+    corners:string[];
 
     evidenceUrl:string;
     

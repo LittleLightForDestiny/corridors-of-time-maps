@@ -18,18 +18,17 @@ export class MapPieceController {
         @Body() body: CreateMapPieceDto
     ) {
         var player: Player = res.locals.authUser;
-
         
-        var piece = await this.service.updateOrNew({
+        var piece = this.service.updateOrNew({
             center: body.center,
             walls: body.walls,
             evidenceUrl: body.evidenceUrl,
-            sides: body.sides,
+            corners: body.corners,
             membershipId: player.membershipId
         });
-
         res.send({
             "status": "success",
+            "message":"piece successfully created",
             "data": piece
         });
     }
@@ -40,8 +39,9 @@ export class MapPieceController {
         @Res() res: any,
         @UploadedFile() file: Express.Multer.File
     ) {
-        var player: Player = res.locals.authUser;
-        var csv = file.buffer.toString();
+        let player: Player = res.locals.authUser;
+        let csv = file.buffer.toString();
+        let dtos:CreateMapPieceDto[] = [];
         CsvParser
             .parseString(csv, {
                 headers: true,
@@ -64,20 +64,24 @@ export class MapPieceController {
                     console.log(center, sides.length, walls);
                     return;
                 }
-                await this.service.updateOrNew({
+                dtos.push({
                     center: center,
                     walls: walls,
                     evidenceUrl: evidence_url,
-                    sides: sides,
+                    corners: sides,
                     membershipId: player.membershipId
                 });
             })
-            .on('end', rowCount => {
+            .on('end', async (rowCount:number) => {
                 console.log(`Parsed ${rowCount} rows`);
                 res.send({
                     "status": "success",
                     "total": rowCount
                 });
+                for(var i in dtos){
+                    console.log('processing piece:', i);
+                    await this.service.updateOrNew(dtos[i]);
+                }
             });
     }
 
