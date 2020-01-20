@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -34,7 +34,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         ],
         synchronize: false,
       }),
-      inject:[ConfigService]
+      inject: [ConfigService]
     }),
     PlayerModule,
     MapModule],
@@ -45,9 +45,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    // consumer
-    //   .apply(BungieAuthMiddleware)
-    //   .forRoutes('/map-piece/import');
+    consumer
+      .apply(BungieAuthMiddleware)
+      .forRoutes('/map-piece/import');
     consumer
       .apply(BungieAuthMiddleware)
       .forRoutes('/map-piece/create');
