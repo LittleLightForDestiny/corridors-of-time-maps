@@ -72,7 +72,7 @@ export class MapPieceService {
     await this.addToMap(piece);
   }
 
-  private async addToMap(piece: MapPiece, createMapIfNotFound:boolean = true, testedSlots:number[][] = []) {
+  async addToMap(piece: MapPiece, createMapIfNotFound:boolean = true, testedSlots:number[][] = []) {
     let possibleNeighbours:PieceCorner[] = await this.findNeighbourCandidates(piece);
     let map: CorridorMap;
     let oldMap: CorridorMap;
@@ -147,7 +147,7 @@ export class MapPieceService {
       if (nCorner && nCorner.code != corner.code) {
         return false;
       }
-      if (nCorner?.code == "BBBBBBB" || corner.code == "BBBBBBB") {
+      if (nCorner?.code == "BBBBBBB" && corner.code == "BBBBBBB") {
         return false;
       }
     }

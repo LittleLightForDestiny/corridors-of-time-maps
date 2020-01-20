@@ -1,5 +1,5 @@
 import * as CsvParser from '@fast-csv/parse';
-import { Controller, Post, Res, UploadedFile, UseInterceptors, Body } from '@nestjs/common';
+import { Controller, Post, Res, UploadedFile, UseInterceptors, Body, Query, Get } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Player } from 'src/entity/player.entity';
 import { MapPieceService } from './map-piece.service';
@@ -31,6 +31,14 @@ export class MapPieceController {
             "message":"piece successfully created",
             "data": piece
         });
+    }
+
+    @Get('process-piece')
+    async reprocessMap(@Query('id') pieceId:string){
+        let piece = await this.service.findOne({identifier:pieceId});
+        
+        await this.service.addToMap(piece, false, []);
+        return piece;
     }
 
     @UseInterceptors(FileInterceptor('file'))
