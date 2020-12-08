@@ -21,7 +21,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
-    "@fast-csv/parse": "^4.0.2",
+    "@fast-csv/parse": "^4.3.6",
     "@nestjs/common": "^6.7.2",
     "@nestjs/config": "0.0.9",
     "@nestjs/core": "^6.7.2",
